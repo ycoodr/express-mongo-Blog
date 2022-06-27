@@ -5,6 +5,7 @@ const session = require("express-session");
 const bodyParser = require("body-parser");
 const _PORT = 3000;
 const index = require("./routes/index");
+const blog = require("./routes/blog");
 
 // app.get("/", (req, res) => {
 //     res.send("Hello");
@@ -20,6 +21,7 @@ app.use(session({
 }));
 
 app.use("/", index);
+app.use("/blog", blog);
 
 app.listen(_PORT, () => {
     console.log("The server is listening on port " + _PORT);

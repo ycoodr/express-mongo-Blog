@@ -7,8 +7,9 @@ const router = express.Router();
 const db_url = "mongodb://localhost:27017";
 
 router.route("/")
-.get(isLoggedIn, (req, res) => {
-    res.render("index", { username: req.session.username });
+.get(isLoggedIn, async (req, res) => {
+    let blogs = await listBlogs();
+    res.render("index", { username: req.session.username, blogs: blogs });
     // console.log(req.session.username);
 });
 
@@ -41,7 +42,7 @@ router.route("/register")
         const result = validationResult(req);
         if(!result.isEmpty()){
             // console.log(result.errors);
-            res.status(422).render("register", { errors: result.errors});
+          return res.status(422).render("register", { errors: result.errors});
         }
         let client = await MongoClient.connect(db_url, { useUnifiedTopology: true });
         let found = await userExists(client, req.body.username, req.body.password);
@@ -104,7 +105,7 @@ router.route("/login")
    async (req, res) => {
         result = validationResult(req);
         if(!result.isEmpty()){
-            res.status(422).render("login", { errors: result.errors })
+           return res.status(422).render("login", { errors: result.errors })
         }
 
         let client = await MongoClient.connect(db_url, { useUnifiedTopology: true });
@@ -148,6 +149,16 @@ async function userExists(client, username, email){
 async function verifyPassword(password, hash){
     return await bcrypt.compare(password, hash);
    
+}
+
+async function listBlogs(){
+    let client = await MongoClient.connect(db_url, { useUnifiedTopology: true});
+    let blogs = await client.db("blog_system").collection("blogs").find({}, { title: 1, desription: 0}).toArray();
+
+    if(blogs && blogs.length){
+        return blogs;
+    }
+    return false;
 }
 
 function isLoggedIn(req, res, next){
